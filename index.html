@@ -26,8 +26,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:400 17px/1.7 "Space Gr
   background-image:radial-gradient(1100px 560px at 85% -8%,rgba(34,211,238,.12),transparent 60%),radial-gradient(900px 520px at -10% 28%,rgba(192,132,252,.09),transparent 60%);
   -webkit-font-smoothing:antialiased}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.5;
-  background-image:linear-gradient(rgba(60,80,140,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(60,80,140,.12) 1px,transparent 1px);background-size:44px 44px;
-  -webkit-mask-image:linear-gradient(#000,transparent 85%);mask-image:linear-gradient(#000,transparent 85%)}
+  background-image:linear-gradient(rgba(60,80,140,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(60,80,140,.12) 1px,transparent 1px);background-size:44px 44px}
 a{color:var(--ar)}
 b,strong{font-weight:700}
 .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
@@ -35,7 +34,7 @@ b,strong{font-weight:700}
 .mono{font-family:var(--mono)}
 
 /* nav */
-nav{position:sticky;top:0;z-index:50;background:rgba(7,11,22,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav{position:sticky;top:0;z-index:50;background:rgba(7,11,22,.96);border-bottom:1px solid var(--line)}
 .navin{display:flex;align-items:center;gap:16px;height:58px}
 .brand{font-weight:700;letter-spacing:.1em;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:9px}
 .dot{width:11px;height:11px;border-radius:50%;background:linear-gradient(135deg,var(--ar),var(--sh))}
@@ -60,7 +59,7 @@ h1{font-size:clamp(40px,6.4vw,72px);line-height:1.04;margin:.1em 0 .3em;letter-s
 .btn.on{background:rgba(var(--cr),.18);border-color:var(--c);color:var(--c)}
 .meta{color:var(--muted);font-size:14px;margin-top:14px}
 .hero-art{display:grid;place-items:center}
-.hero-art svg{width:100%;max-width:440px;height:auto;filter:drop-shadow(0 20px 50px rgba(34,211,238,.18))}
+.hero-art svg{width:100%;max-width:440px;height:auto}
 @media(max-width:860px){.hero-grid{grid-template-columns:1fr}.hero{padding-top:40px}}
 
 /* sections */
@@ -721,7 +720,8 @@ function bitCells(v, bits, cls){
   const so = new IntersectionObserver(es => es.forEach(e => {
     if(e.isIntersecting){
       links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
-      const on = $('#links a.on'); if(on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+      const on = $('#links a.on'), box = $('#links');
+      if(on) box.scrollLeft += on.getBoundingClientRect().left - box.getBoundingClientRect().left - (box.clientWidth - on.offsetWidth) / 2;
     }
   }), { rootMargin: '-45% 0px -50% 0px' });
   secs.forEach(s => s && so.observe(s));

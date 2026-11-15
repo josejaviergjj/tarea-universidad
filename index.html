@@ -3,24 +3,917 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>La Unidad Aritmético-Lógica (ALU)</title>
+<title>La ALU: Unidad Aritmético-Lógica</title>
+<meta name="description" content="Análisis del funcionamiento, estructura y relevancia de la Unidad Aritmético-Lógica (ALU): unidad aritmética, lógica y de desplazamiento, con simulador interactivo.">
+<meta name="theme-color" content="#070b16">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 8h18l6 14h0l6-14h18L46 56H18z' fill='%2322d3ee'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
-  h1 { color: #1a3a7a; }
-  section { margin-bottom: 1.5rem; }
+:root{
+  --bg:#070b16; --panel:#0f1830; --panel2:#0b1226; --line:#22305a;
+  --text:#e8edff; --muted:#a3b0d6;
+  --ar:#22d3ee; --lo:#fbbf24; --sh:#c084fc; --ok:#34d399; --bad:#fb7185;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+.ar{--c:var(--ar);--cr:34,211,238}
+.lo{--c:var(--lo);--cr:251,191,36}
+.sh{--c:var(--sh);--cr:192,132,252}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--text);font:400 17px/1.7 "Space Grotesk",system-ui,sans-serif;
+  background-image:radial-gradient(1100px 560px at 85% -8%,rgba(34,211,238,.12),transparent 60%),radial-gradient(900px 520px at -10% 28%,rgba(192,132,252,.09),transparent 60%);
+  -webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.5;
+  background-image:linear-gradient(rgba(60,80,140,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(60,80,140,.12) 1px,transparent 1px);background-size:44px 44px;
+  -webkit-mask-image:linear-gradient(#000,transparent 85%);mask-image:linear-gradient(#000,transparent 85%)}
+a{color:var(--ar)}
+b,strong{font-weight:700}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.skip{position:absolute;left:-999px}.skip:focus{left:10px;top:10px;background:#fff;color:#000;padding:8px 12px;z-index:99;border-radius:8px}
+.mono{font-family:var(--mono)}
+
+/* nav */
+nav{position:sticky;top:0;z-index:50;background:rgba(7,11,22,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.navin{display:flex;align-items:center;gap:16px;height:58px}
+.brand{font-weight:700;letter-spacing:.1em;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:9px}
+.dot{width:11px;height:11px;border-radius:50%;background:linear-gradient(135deg,var(--ar),var(--sh))}
+.links{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.links::-webkit-scrollbar{display:none}
+.links a{padding:8px 12px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:14px;white-space:nowrap;transition:.2s}
+.links a:hover,.links a.on{color:var(--text);background:rgba(255,255,255,.08)}
+
+/* hero */
+.hero{padding:64px 0 24px}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center}
+.eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ar);margin:0 0 10px}
+h1{font-size:clamp(40px,6.4vw,72px);line-height:1.04;margin:.1em 0 .3em;letter-spacing:-.025em}
+.grad{background:linear-gradient(100deg,var(--ar),var(--sh) 62%,var(--lo));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:clamp(18px,2.2vw,21px);color:var(--muted);max-width:58ch;margin:0 0 18px}
+.chip{display:inline-block;padding:5px 13px;border-radius:999px;border:1px solid var(--c);color:var(--c);background:rgba(var(--cr),.1);font-size:14px;margin:3px 6px 3px 0}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0 8px}
+.btn{display:inline-block;padding:12px 20px;border-radius:12px;border:1px solid var(--line);color:var(--text);text-decoration:none;font:500 16px "Space Grotesk",sans-serif;background:var(--panel);cursor:pointer;transition:.2s}
+.btn:hover{border-color:var(--ar);transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(135deg,var(--ar),#38bdf8);color:#04101c;border:0;font-weight:700}
+.btn.sm{padding:8px 14px;font-size:14px}
+.btn.on{background:rgba(var(--cr),.18);border-color:var(--c);color:var(--c)}
+.meta{color:var(--muted);font-size:14px;margin-top:14px}
+.hero-art{display:grid;place-items:center}
+.hero-art svg{width:100%;max-width:440px;height:auto;filter:drop-shadow(0 20px 50px rgba(34,211,238,.18))}
+@media(max-width:860px){.hero-grid{grid-template-columns:1fr}.hero{padding-top:40px}}
+
+/* sections */
+section{padding:88px 0 8px}
+h2{font-size:clamp(28px,4.2vw,44px);line-height:1.1;margin:.1em 0 .45em;letter-spacing:-.02em}
+h3{font-size:22px;margin:1.7em 0 .5em}
+h4{margin:0 0 6px;font-size:18px}
+p{margin:.55em 0}
+.sub{color:var(--muted);max-width:70ch}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;position:relative}
+.card.c{border-top:3px solid var(--c)}
+.grid2,.grid3,.grid4{display:grid;gap:16px}
+.grid2{grid-template-columns:repeat(2,1fr)}.grid3{grid-template-columns:repeat(3,1fr)}.grid4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.grid3,.grid4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+.split{display:grid;grid-template-columns:1.2fr .8fr;gap:22px;align-items:start}
+@media(max-width:860px){.split{grid-template-columns:1fr}}
+.tagline{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--c)}
+.code{background:#050912;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font:14px/1.7 var(--mono);overflow:auto;margin:10px 0;color:#d6e0ff;white-space:pre}
+.code .cm{color:#6f7fb0}
+.callout{border-left:3px solid var(--c,var(--ar));background:rgba(var(--cr,34,211,238),.08);padding:12px 16px;border-radius:0 12px 12px 0;margin:14px 0}
+.fig{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:14px;margin:16px 0}
+.fig figcaption,.cap{color:var(--muted);font-size:14px;text-align:center;margin-top:8px}
+.fig svg{width:100%;height:auto;display:block}
+svg text{fill:var(--text);font-family:"Space Grotesk",sans-serif;font-size:14px}
+svg .m{font-family:var(--mono);font-size:12px;fill:var(--muted)}
+svg .mid{text-anchor:middle}
+svg .end{text-anchor:end}
+code,.k{font-family:var(--mono);font-size:.92em;background:rgba(255,255,255,.07);padding:1px 6px;border-radius:6px}
+
+/* tables */
+.tbl{border-collapse:collapse;font-family:var(--mono);font-size:14px;margin:8px 0}
+.tbl th,.tbl td{border:1px solid var(--line);padding:5px 12px;text-align:center}
+.tbl th{background:rgba(255,255,255,.05);font-weight:700}
+.tbl td.hi{background:rgba(var(--cr,34,211,238),.2);color:var(--c,var(--ar));font-weight:700}
+.scroll{overflow-x:auto}
+
+/* bits */
+.bits{display:flex;gap:4px;flex-wrap:nowrap}
+.bit{width:34px;height:40px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;font:700 16px var(--mono);background:var(--panel2);color:#5b6a9a;transition:.25s}
+.bit.on{background:rgba(var(--cr,34,211,238),.2);border-color:var(--c,var(--ar));color:var(--c,var(--ar))}
+button.bit{cursor:pointer;padding:0}
+.bit.sep{margin-right:8px}
+.bit.cf{border-style:dashed}
+.flash .bit{animation:fl .45s}
+@keyframes fl{50%{transform:translateY(-4px);box-shadow:0 6px 18px rgba(var(--cr,34,211,238),.45)}}
+@media(max-width:520px){.bit{width:28px;height:36px;font-size:14px}}
+
+/* timeline */
+.tl{position:relative;margin:18px 0 0 8px;padding-left:28px;border-left:2px solid var(--line)}
+.tl .it{position:relative;margin:0 0 22px}
+.tl .it::before{content:"";position:absolute;left:-37px;top:7px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:3px solid var(--ar)}
+.tl .yr{font:700 15px var(--mono);color:var(--ar)}
+.tl h4{margin:2px 0}
+.tl p{margin:2px 0;color:var(--muted)}
+
+/* gates */
+.gate svg{width:130px;height:auto}
+.gate svg path,.gate svg circle{fill:rgba(251,191,36,.1);stroke:var(--lo);stroke-width:2.2}
+.gate svg line{stroke:var(--lo);stroke-width:2.2}
+.expr{font-family:var(--mono);color:var(--lo);font-size:15px}
+
+/* diagrams */
+.wire{fill:none;stroke:#2d3f78;stroke-width:2.2;transition:.25s}
+.wire.on{stroke:var(--ar);stroke-width:3.2;filter:drop-shadow(0 0 4px rgba(34,211,238,.7))}
+.wire.act{stroke:var(--c);stroke-width:3.4;filter:drop-shadow(0 0 5px var(--c))}
+.unitbox rect{fill:#0c1530;stroke:var(--c);stroke-width:2;transition:.25s}
+.unitbox{transition:.25s}
+.unitbox.dim{opacity:.28}
+.unitbox.act rect{fill:rgba(var(--cr),.2);filter:drop-shadow(0 0 10px var(--c))}
+.blk{fill:#0c1530;stroke:#3b4f95;stroke-width:2}
+.flow{stroke-dasharray:6 8;animation:dash 1.1s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-28}}
+.pulse{animation:pls 2.4s ease-in-out infinite}
+@keyframes pls{50%{opacity:.35}}
+
+/* toggles & pills */
+.tog{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.tg{min-width:90px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font:700 15px var(--mono);cursor:pointer;transition:.2s}
+.tg.on{background:rgba(34,211,238,.18);border-color:var(--ar);color:var(--ar)}
+.pill{display:inline-flex;gap:6px;align-items:center;padding:4px 12px;border-radius:999px;border:1px solid var(--line);font:700 13px var(--mono);color:#5b6a9a;background:var(--panel2);transition:.2s}
+.pill.on{color:#04101c;background:var(--ok);border-color:var(--ok)}
+.pill.off{opacity:.9}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+
+/* lab */
+.lab{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px}
+@media(max-width:900px){.lab{grid-template-columns:1fr}}
+.lab label{display:block;font:700 13px var(--mono);letter-spacing:.06em;color:var(--muted);margin:12px 0 4px;text-transform:uppercase}
+.lab input[type=number]{width:120px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:700 17px var(--mono)}
+.opgrp{margin:12px 0 0}
+.opgrp .tagline{margin-bottom:4px}
+.ops{display:flex;gap:8px;flex-wrap:wrap}
+.res{font:700 15px var(--mono)}
+.stat{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:14px;color:var(--muted);margin:10px 0}
+.stat b{color:var(--text)}
+#labExp{min-height:3.4em}
+
+/* program */
+.prog{display:grid;grid-template-columns:.8fr 1.2fr;gap:18px}
+@media(max-width:860px){.prog{grid-template-columns:1fr}}
+.ln{display:block;padding:3px 10px;border-radius:6px;border-left:3px solid transparent;opacity:.5}
+.ln.done{opacity:.9}
+.ln.cur{opacity:1;background:rgba(255,255,255,.08);border-left-color:var(--c,var(--ar))}
+.regs{display:grid;grid-template-columns:1fr;gap:10px;margin:8px 0}
+.reg{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-family:var(--mono)}
+.reg .nm{font-weight:700;width:34px}
+.reg .bin{color:var(--muted);letter-spacing:.04em;font-size:13px}
+.reg .dec{color:var(--ar);font-weight:700;min-width:50px}
+.unitnote{display:inline-block;margin-top:6px}
+
+/* pipeline */
+.pipe{display:grid;grid-template-columns:70px repeat(8,minmax(40px,1fr));gap:4px;font:700 13px var(--mono);min-width:560px}
+.pipe div{padding:7px 0;text-align:center;border-radius:8px;background:var(--panel2);color:var(--muted)}
+.pipe .h{background:none;color:var(--muted)}
+.pipe .s{background:rgba(255,255,255,.07);color:var(--text)}
+.pipe .x{background:rgba(34,211,238,.25);color:var(--ar);box-shadow:inset 0 0 0 1px var(--ar)}
+.pipe .l{background:none;text-align:left;padding-left:4px;color:var(--text)}
+.bar{display:flex;align-items:center;gap:10px;margin:6px 0;font:13px var(--mono);color:var(--muted)}
+.bar i{display:block;height:14px;border-radius:7px;min-width:6px}
+.bar .lbl{width:100px;flex:none}
+
+/* misc */
+.step{counter-increment:st}
+.step .n{font:700 13px var(--mono);color:var(--ar)}
+.refs li{margin:6px 0;color:var(--muted)}
+.video{display:grid;grid-template-columns:1fr;gap:16px;text-align:center}
+.vframe{position:relative;padding-top:56.25%;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#000}
+.vframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+footer{margin-top:90px;padding:34px 0 50px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;text-align:center}
+
+.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+.js .reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}.js .reveal{opacity:1;transform:none}}
 </style>
+<script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
-  <h1>La Unidad Aritmético-Lógica (ALU)</h1>
-  <p>Trabajo de Aplicación II Corte — Instituto Universitario Politécnico "Santiago Mariño"</p>
-  <p><strong>Hello world.</strong> Página en construcción.</p>
+<!-- Marcadores y degradados compartidos por todos los SVG -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="arw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8fa0d6"/></marker>
+  <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset=".6" stop-color="#c084fc"/><stop offset="1" stop-color="#fbbf24"/></linearGradient>
+</defs></svg>
 
-  <section><h2>Introducción a la ALU</h2><p>Próximamente.</p></section>
-  <section><h2>Unidad Aritmética</h2><p>Próximamente.</p></section>
-  <section><h2>Unidad Lógica</h2><p>Próximamente.</p></section>
-  <section><h2>Unidad de Desplazamiento</h2><p>Próximamente.</p></section>
-  <section><h2>Interacción entre las unidades</h2><p>Próximamente.</p></section>
-  <section><h2>Importancia de la ALU en el rendimiento del sistema</h2><p>Próximamente.</p></section>
-  <section><h2>Video explicativo</h2><p><a href="#">Enlace al video (pendiente)</a></p></section>
+<a class="skip" href="#main">Saltar al contenido</a>
+<nav><div class="wrap navin">
+  <a class="brand" href="#top"><span class="dot"></span>ALU</a>
+  <div class="links" id="links">
+    <a href="#intro">Introducción</a><a href="#aritmetica">Aritmética</a><a href="#logica">Lógica</a>
+    <a href="#desplazamiento">Desplazamiento</a><a href="#interaccion">Interacción</a><a href="#rendimiento">Rendimiento</a>
+    <a href="#video">Video</a><a href="#cierre">Referencias</a>
+  </div>
+</div></nav>
+
+<header id="top" class="hero"><div class="wrap hero-grid">
+  <div>
+    <p class="eyebrow">Trabajo de Aplicación · II Corte</p>
+    <h1>La <span class="grad">Unidad Aritmético-Lógica</span></h1>
+    <p class="lead">El circuito donde un procesador realmente <b>calcula, compara y decide</b>. Analizamos cómo funciona, de qué se compone y por qué marca el rendimiento de toda la computadora.</p>
+    <div>
+      <span class="chip ar">Unidad Aritmética</span><span class="chip lo">Unidad Lógica</span><span class="chip sh">Unidad de Desplazamiento</span>
+    </div>
+    <div class="cta"><a class="btn primary" href="#lab">Probar la ALU</a><a class="btn" href="#intro">Empezar a leer</a><a class="btn" href="#video">Ver el video</a></div>
+    <p class="meta">Instituto Universitario Politécnico “Santiago Mariño”<span id="integrantes"></span></p>
+  </div>
+  <div class="hero-art">
+    <svg viewBox="0 0 420 380" role="img" aria-label="Símbolo de la ALU con entradas A y B, código de operación, resultado y banderas">
+      <path d="M70 60 L170 60 L200 130 L240 130 L270 60 L370 60 L310 270 L130 270 Z" fill="url(#g1)" fill-opacity=".14" stroke="url(#g1)" stroke-width="3.5" stroke-linejoin="round"/>
+      <text x="220" y="205" class="mid" style="font-size:58px;font-weight:700;letter-spacing:.04em">ALU</text>
+      <circle cx="190" cy="240" r="6" fill="#22d3ee" class="pulse"/><circle cx="220" cy="240" r="6" fill="#fbbf24" class="pulse" style="animation-delay:.4s"/><circle cx="250" cy="240" r="6" fill="#c084fc" class="pulse" style="animation-delay:.8s"/>
+      <g stroke="#8fa0d6" stroke-width="2.5" fill="none" marker-end="url(#arw)">
+        <path d="M120 34 V56" class="flow"/><path d="M320 34 V56" class="flow"/>
+        <path d="M24 160 H94" class="flow"/><path d="M344 160 H398" class="flow" style="animation-direction:reverse"/>
+        <path d="M220 274 V328" class="flow"/>
+      </g>
+      <text x="120" y="22" class="mid" style="font-size:20px;font-weight:700">A</text>
+      <text x="320" y="22" class="mid" style="font-size:20px;font-weight:700">B</text>
+      <text x="24" y="146" class="m">opcode</text>
+      <text x="398" y="146" class="m end">banderas</text>
+      <text x="398" y="184" class="m end">Z S C V</text>
+      <text x="220" y="354" class="mid" style="font-size:18px;font-weight:700">Resultado</text>
+    </svg>
+  </div>
+</div></header>
+
+<main id="main">
+
+<!-- ============ 01 INTRODUCCIÓN ============ -->
+<section id="intro"><div class="wrap reveal">
+  <p class="eyebrow">01 · Introducción</p>
+  <h2>¿Qué es la ALU y para qué sirve?</h2>
+  <div class="split">
+    <div>
+      <p>La <b>Unidad Aritmético-Lógica (ALU)</b> es el circuito digital dentro de la CPU que ejecuta las operaciones con números enteros: <b>aritméticas</b> (sumar, restar…), <b>lógicas</b> bit a bit (AND, OR, NOT, XOR) y <b>desplazamientos</b> de bits. Es un circuito <i>combinacional</i>: su salida depende solo de lo que entra en ese instante, sin memoria propia.</p>
+      <p>Recibe dos operandos (<b>A</b> y <b>B</b>) y un <b>código de operación</b> que le dice qué hacer. Entrega un <b>resultado</b> y un conjunto de <b>banderas de estado</b> que describen cómo salió la operación. Los números en punto flotante los trata otra unidad, la FPU.</p>
+      <div class="callout"><b>Idea clave:</b> casi todo lo que hace un programa (un bucle, un <code>if</code>, un cálculo, un píxel) termina convertido en operaciones simples que pasan por la ALU.</div>
+    </div>
+    <div class="card">
+      <h4>Entradas y salidas</h4>
+      <p class="sub" style="margin:0 0 8px"><b style="color:var(--ar)">Entradas</b></p>
+      <ul style="margin:0 0 10px;padding-left:20px"><li>Operando <b>A</b> y operando <b>B</b></li><li>Señal de control (<i>opcode</i>)</li></ul>
+      <p class="sub" style="margin:0 0 8px"><b style="color:var(--lo)">Salidas</b></p>
+      <ul style="margin:0;padding-left:20px"><li>Resultado de <i>n</i> bits</li><li><b>Z</b> cero · <b>S</b> signo · <b>C</b> acarreo · <b>V</b> desbordamiento</li></ul>
+    </div>
+  </div>
+
+  <h3>Propósito dentro del procesador</h3>
+  <div class="grid3">
+    <div class="card c ar"><div class="tagline">Calcular</div><h4>Operar con datos</h4><p class="sub">Suma, resta, multiplicación y división de enteros: la base de cualquier programa.</p></div>
+    <div class="card c lo"><div class="tagline">Decidir</div><h4>Comparar y tomar decisiones</h4><p class="sub">Al restar dos valores, las banderas dicen si son iguales o cuál es mayor. Así se resuelven los <code>if</code> y los bucles.</p></div>
+    <div class="card c sh"><div class="tagline">Manipular</div><h4>Trabajar con bits</h4><p class="sub">Máscaras, desplazamientos y rotaciones para empaquetar datos, cifrar y multiplicar rápido.</p></div>
+  </div>
+
+  <h3>Historia y evolución</h3>
+  <div class="tl">
+    <div class="it"><div class="yr">1945</div><h4>El “órgano aritmético” de von Neumann</h4><p>El borrador del informe sobre la EDVAC describe una parte aritmética central, separada del control y de la memoria. Nace el concepto de ALU.</p></div>
+    <div class="it"><div class="yr">1945</div><h4>ENIAC</h4><p>Primera computadora electrónica de propósito general. Calculaba en decimal con acumuladores de válvulas de vacío y se programaba reconectando cables.</p></div>
+    <div class="it"><div class="yr">Años 50 y 60</div><h4>Del tubo al transistor</h4><p>Los transistores reemplazan a las válvulas: ALUs más rápidas, pequeñas, frías y confiables, construidas con muchos componentes discretos.</p></div>
+    <div class="it"><div class="yr">1970</div><h4>74181, la ALU en un chip</h4><p>El circuito integrado 74181 de Texas Instruments reúne una ALU de 4 bits con 32 funciones (16 aritméticas y 16 lógicas). Se acoplaban varios para formar ALUs de 8, 16 o más bits.</p></div>
+    <div class="it"><div class="yr">1971</div><h4>Intel 4004</h4><p>El primer microprocesador comercial: una CPU completa, con su ALU de 4 bits, en un solo chip.</p></div>
+    <div class="it"><div class="yr">1978</div><h4>Intel 8086</h4><p>ALU de 16 bits y origen de la arquitectura x86, la misma que usamos en los ejemplos de ensamblador de esta página.</p></div>
+    <div class="it"><div class="yr">1993</div><h4>Intel Pentium</h4><p>Dos canales de ejecución para enteros: la CPU puede ejecutar dos instrucciones aritméticas a la vez (superescalar).</p></div>
+    <div class="it"><div class="yr">2003</div><h4>Llegan los 64 bits</h4><p>Con x86-64 (AMD Opteron y Athlon 64) las ALUs de los computadores personales pasan a trabajar con operandos de 64 bits.</p></div>
+    <div class="it"><div class="yr">Hoy</div><h4>Varias ALU por núcleo</h4><p>Los núcleos modernos combinan varias ALU en paralelo, ejecución fuera de orden y unidades vectoriales (SIMD) que operan sobre muchos datos por instrucción.</p></div>
+  </div>
+</div></section>
+
+<!-- ============ 02 ARITMÉTICA ============ -->
+<section id="aritmetica"><div class="wrap reveal ar">
+  <p class="eyebrow" style="color:var(--ar)">02 · Unidad Aritmética</p>
+  <h2>Sumar es la operación madre</h2>
+  <p class="sub">La unidad aritmética está construida alrededor de un <b>sumador</b>. Con unos pocos añadidos, ese mismo circuito resta; y con sumas y desplazamientos repetidos se multiplica y se divide.</p>
+
+  <h3>Operaciones básicas, en binario</h3>
+  <div class="grid2">
+    <div class="card c"><div class="tagline">Suma</div><h4>Columna por columna, con acarreo</h4>
+<div class="code">  acarreo  0 1 1 0
+           0 1 1 0   (6)
+         + 0 0 1 1   (3)
+         ---------
+           1 0 0 1   (9)</div>
+      <p class="sub">0+0=0 · 0+1=1 · 1+1=10 (escribe 0 y “lleva 1”).</p></div>
+    <div class="card c"><div class="tagline">Resta</div><h4>Sumar el complemento a dos</h4>
+<div class="code">A − B = A + (~B) + 1
+7 − 5:   0111
+       + 1010   (~0101)
+       +    1
+       -------
+        10010 → 0010 (2)</div>
+      <p class="sub">No hace falta un circuito restador aparte: se invierte B y se suma 1.</p></div>
+    <div class="card c"><div class="tagline">Multiplicación</div><h4>Desplazar y sumar</h4>
+<div class="code">  101   (5)
+x 011   (3)
+-------
+  101   ← 5 x 1
+ 1010   ← 5 x 1, desplazado 1
+0000    ← 5 x 0, desplazado 2
+-------
+ 1111   (15)</div>
+      <p class="sub">Cada bit del multiplicador activa (o no) una copia desplazada del multiplicando.</p></div>
+    <div class="card c"><div class="tagline">División</div><h4>Desplazar y restar</h4>
+<div class="scroll"><table class="tbl"><tr><th>Bit</th><th>Resto</th><th>≥ 3 ?</th><th>q</th></tr>
+<tr><td>1</td><td>1</td><td>no</td><td>0</td></tr>
+<tr><td>1</td><td>3 → 0</td><td>sí, resta</td><td>1</td></tr>
+<tr><td>0</td><td>0</td><td>no</td><td>0</td></tr>
+<tr><td>1</td><td>1</td><td>no</td><td>0</td></tr></table></div>
+      <p class="sub">1101 ÷ 11 (13 ÷ 3) = <b>0100</b> (4), resto <b>1</b>. Se baja un bit del dividendo por paso y se resta el divisor cuando cabe.</p></div>
+  </div>
+
+  <h3>Implementación de operaciones en binario</h3>
+  <div class="split">
+    <div>
+      <p>Los enteros con signo se guardan en <b>complemento a dos</b>: para negar un número se invierten sus bits y se suma 1. Así <code>−5</code> en 4 bits es <code>1011</code>. La ventaja: la misma suma sirve para números positivos y negativos.</p>
+      <p>Con <i>n</i> bits se representan los valores de <b>−2<sup>n−1</sup></b> a <b>2<sup>n−1</sup>−1</b> (en 8 bits, de −128 a 127). Si un resultado se sale de ese rango ocurre un <b>desbordamiento</b>:</p>
+<div class="code">  0111   (7)
++ 0001   (1)
+= 1000   (−8 con signo)  ← V = 1</div>
+      <p class="sub">El acarreo (<b>C</b>) avisa que un resultado sin signo no cupo; el desbordamiento (<b>V</b>) avisa lo mismo para números con signo.</p>
+    </div>
+    <div class="card"><h4>Rango según los bits</h4>
+      <div class="scroll"><table class="tbl"><tr><th>Bits</th><th>Sin signo</th><th>Con signo</th></tr>
+      <tr><td>4</td><td>0 … 15</td><td>−8 … 7</td></tr>
+      <tr><td>8</td><td>0 … 255</td><td>−128 … 127</td></tr>
+      <tr><td>16</td><td>0 … 65 535</td><td>−32 768 … 32 767</td></tr></table></div>
+    </div>
+  </div>
+
+  <h3>Circuitos aritméticos: sumadores y restadores</h3>
+  <div class="grid2">
+    <div class="card"><div class="tagline" style="color:var(--ar)">Semisumador</div><p class="sub" style="margin-top:4px">Suma dos bits. No acepta acarreo de entrada.</p>
+      <div class="scroll"><table class="tbl"><tr><th>A</th><th>B</th><th>S</th><th>C</th></tr>
+      <tr><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>0</td><td>1</td><td>0</td></tr><tr><td>1</td><td>1</td><td>0</td><td class="hi">1</td></tr></table></div>
+      <p class="mono" style="color:var(--ar)">S = A ⊕ B<br>C = A · B</p></div>
+    <div class="card"><div class="tagline" style="color:var(--ar)">Sumador completo</div><p class="sub" style="margin-top:4px">Suma dos bits más el acarreo que llega del bit anterior.</p>
+      <div class="scroll"><table class="tbl"><tr><th>A</th><th>B</th><th>Cin</th><th>S</th><th>Cout</th></tr>
+      <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr><tr><td>0</td><td>1</td><td>1</td><td>0</td><td class="hi">1</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr><tr><td>1</td><td>0</td><td>1</td><td>0</td><td class="hi">1</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td><td>0</td><td class="hi">1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td class="hi">1</td></tr></table></div>
+      <p class="mono" style="color:var(--ar)">S = A ⊕ B ⊕ Cin<br>Cout = A·B + Cin·(A ⊕ B)</p></div>
+  </div>
+
+  <div class="fig">
+    <svg viewBox="0 0 640 250" role="img" aria-label="Circuito del sumador completo con dos XOR, dos AND y una OR">
+      <!-- cables (clase w-X: se encienden según el valor) -->
+      <g class="wire w-A"><path d="M44 65 H150"/><path d="M90 65 V145 H150"/></g>
+      <g class="wire w-B"><path d="M44 95 H150"/><path d="M110 95 V165 H150"/></g>
+      <g class="wire w-Cin"><path d="M44 215 H300"/><path d="M280 215 V95 H300"/></g>
+      <g class="wire w-x1"><path d="M210 80 H250 V65 H300"/><path d="M250 80 V185 H300"/></g>
+      <g class="wire w-a1"><path d="M210 155 H450"/></g>
+      <g class="wire w-a2"><path d="M360 200 H400 V185 H450"/></g>
+      <g class="wire w-S"><path d="M360 80 H570"/></g>
+      <g class="wire w-Cout"><path d="M510 170 H570"/></g>
+      <g fill="#8fa0d6"><circle cx="90" cy="65" r="3.5"/><circle cx="110" cy="95" r="3.5"/><circle cx="280" cy="215" r="3.5"/><circle cx="250" cy="80" r="3.5"/></g>
+      <!-- compuertas -->
+      <rect class="blk" x="150" y="50" width="60" height="60" rx="10"/><text x="180" y="86" class="mid" style="font-weight:700">XOR</text>
+      <rect class="blk" x="300" y="50" width="60" height="60" rx="10"/><text x="330" y="86" class="mid" style="font-weight:700">XOR</text>
+      <rect class="blk" x="150" y="130" width="60" height="50" rx="10"/><text x="180" y="160" class="mid" style="font-weight:700">AND</text>
+      <rect class="blk" x="300" y="170" width="60" height="60" rx="10"/><text x="330" y="206" class="mid" style="font-weight:700">AND</text>
+      <rect class="blk" x="450" y="140" width="60" height="60" rx="10"/><text x="480" y="176" class="mid" style="font-weight:700">OR</text>
+      <!-- etiquetas -->
+      <text x="10" y="70" style="font-weight:700">A</text><text x="10" y="100" style="font-weight:700">B</text><text x="4" y="220" style="font-weight:700">Cin</text>
+      <text x="576" y="85" style="font-weight:700">S</text><text x="576" y="175" style="font-weight:700">Cout</text>
+      <text id="faS" x="600" y="104" class="m mid">0</text><text id="faC" x="604" y="194" class="m mid">0</text>
+    </svg>
+    <figcaption>Sumador completo de 1 bit. Activa las entradas de abajo y mira cómo se “enciende” el camino de cada señal.</figcaption>
+  </div>
+  <div class="tog" id="faTog">
+    <button class="tg" data-i="A" aria-pressed="false">A = 0</button>
+    <button class="tg" data-i="B" aria-pressed="false">B = 0</button>
+    <button class="tg" data-i="Cin" aria-pressed="false">Cin = 0</button>
+  </div>
+  <p id="faOut" class="mono" style="color:var(--ar)"></p>
+
+  <h3>Encadenar sumadores: de 1 bit a <i>n</i> bits</h3>
+  <p>Para sumar números de 4, 8 o 64 bits se encadenan sumadores completos: el acarreo de salida de cada uno entra al siguiente. Se llama <b>sumador de acarreo en cascada</b> (<i>ripple-carry</i>). Es simple, pero el acarreo debe “viajar” por todos los bloques.</p>
+  <div class="fig"><div id="ripple"></div><figcaption>Sumador de 4 bits formado por cuatro sumadores completos (FA).</figcaption></div>
+  <div class="callout"><b>El restador es el mismo sumador.</b> Una señal <code>SUB</code> invierte cada bit de B (con una compuerta XOR) y entra como acarreo inicial: <code>A − B = A + (B ⊕ 1111) + 1</code>. Con <code>SUB = 0</code> suma; con <code>SUB = 1</code> resta.</div>
+</div></section>
+
+<!-- ============ 03 LÓGICA ============ -->
+<section id="logica"><div class="wrap reveal lo">
+  <p class="eyebrow" style="color:var(--lo)">03 · Unidad Lógica</p>
+  <h2>Decisiones bit a bit</h2>
+  <p class="sub">La unidad lógica aplica compuertas lógicas a cada par de bits de A y B <b>de forma independiente</b>. No hay acarreos ni “llevo uno”: el bit 3 del resultado depende solo de los bits 3 de A y B.</p>
+
+  <h3>Operaciones lógicas: AND, OR, NOT, XOR</h3>
+  <div class="grid4" id="gates"></div>
+
+  <h3>Mismas operaciones sobre 8 bits</h3>
+  <div class="scroll"><table class="tbl" style="--c:var(--lo);--cr:251,191,36">
+    <tr><th>Operación</th><th>Resultado</th><th>Para qué sirve</th></tr>
+    <tr><td colspan="3" style="text-align:left">A = 1100 1010 &nbsp;&nbsp;·&nbsp;&nbsp; B = 1010 0110</td></tr>
+    <tr><td style="text-align:left">A AND B</td><td class="hi">1000 0010</td><td style="text-align:left;font-family:'Space Grotesk'">Máscara: conservar o aislar bits</td></tr>
+    <tr><td style="text-align:left">A OR B</td><td class="hi">1110 1110</td><td style="text-align:left;font-family:'Space Grotesk'">Activar bits (poner banderas)</td></tr>
+    <tr><td style="text-align:left">A XOR B</td><td class="hi">0110 1100</td><td style="text-align:left;font-family:'Space Grotesk'">Alternar bits; detectar diferencias</td></tr>
+    <tr><td style="text-align:left">NOT A</td><td class="hi">0011 0101</td><td style="text-align:left;font-family:'Space Grotesk'">Invertir todos los bits</td></tr>
+  </table></div>
+
+  <h3>Aplicaciones: toma de decisiones y control de flujo</h3>
+  <div class="split">
+    <div>
+      <p>La ALU no “entiende” un <code>if</code>; lo que hace es <b>comparar y dejar el resultado en las banderas</b>. La instrucción <code>CMP A, B</code> resta A − B <i>sin guardar el resultado</i>, solo actualiza las banderas. Después, la unidad de control lee esas banderas para decidir si salta o no:</p>
+      <div class="scroll"><table class="tbl" style="--c:var(--lo);--cr:251,191,36">
+        <tr><th>Pregunta</th><th>Salto (x86)</th><th>Bandera</th></tr>
+        <tr><td>¿A = B?</td><td>JE</td><td>Z = 1</td></tr>
+        <tr><td>¿A ≠ B?</td><td>JNE</td><td>Z = 0</td></tr>
+        <tr><td>¿A &lt; B? (sin signo)</td><td>JB</td><td>C = 1</td></tr>
+        <tr><td>¿A &lt; B? (con signo)</td><td>JL</td><td>S ≠ V</td></tr>
+      </table></div>
+    </div>
+    <div class="card c lo"><div class="tagline">Trucos con lógica</div>
+      <ul style="margin:6px 0 0;padding-left:18px">
+        <li><code>AND x, 0Fh</code>: se queda con los 4 bits bajos.</li>
+        <li><code>OR x, 04h</code>: activa el bit 2 (una bandera).</li>
+        <li><code>XOR x, x</code>: pone x en cero (A ⊕ A = 0), más rápido y compacto que cargar 0.</li>
+        <li><code>TEST x, 1</code>: ¿es par o impar?</li>
+      </ul></div>
+  </div>
+  <div class="callout" style="--c:var(--lo);--cr:251,191,36">Un bucle <code>for</code> o <code>while</code> es, en el fondo, una resta que se repite y un salto condicionado a la bandera Z.</div>
+
+  <h3>Diseño de compuertas y su integración en la ALU</h3>
+  <p>La ALU se construye por <b>rebanadas de 1 bit</b> (<i>bit-slices</i>). Cada rebanada contiene sus compuertas AND y OR, un sumador completo y un <b>multiplexor</b>: un selector controlado por el <i>opcode</i> que decide cuál de los resultados sale. Para una ALU de 8 bits se colocan 8 rebanadas en fila, con los acarreos encadenados.</p>
+  <div class="fig">
+    <svg viewBox="0 0 640 290" role="img" aria-label="Rebanada de 1 bit de la ALU: compuertas AND, OR y sumador, seleccionadas con un multiplexor">
+      <g class="wire"><path d="M90 40 V184"/><path d="M120 40 V200"/></g>
+      <g class="wire" marker-end="url(#arw)"><path d="M90 44 H218"/><path d="M120 60 H218"/><path d="M90 114 H218"/><path d="M120 130 H218"/><path d="M90 184 H218"/><path d="M120 200 H218"/></g>
+      <g fill="#8fa0d6"><circle cx="90" cy="44" r="3.5"/><circle cx="90" cy="114" r="3.5"/><circle cx="90" cy="184" r="3.5"/><circle cx="120" cy="60" r="3.5"/><circle cx="120" cy="130" r="3.5"/><circle cx="120" cy="200" r="3.5"/></g>
+      <text x="90" y="28" class="mid" style="font-weight:700">A</text><text x="120" y="28" class="mid" style="font-weight:700">B</text>
+      <rect class="blk" x="220" y="30" width="110" height="44" rx="10" style="stroke:var(--lo)"/><text x="275" y="58" class="mid" style="font-weight:700">AND</text>
+      <rect class="blk" x="220" y="100" width="110" height="44" rx="10" style="stroke:var(--lo)"/><text x="275" y="128" class="mid" style="font-weight:700">OR</text>
+      <rect class="blk" x="220" y="170" width="110" height="44" rx="10" style="stroke:var(--ar)"/><text x="275" y="198" class="mid" style="font-weight:700">Sumador (Σ)</text>
+      <g class="wire" marker-end="url(#arw)"><path d="M330 52 H430"/><path d="M330 122 H430"/><path d="M330 186 H430"/></g>
+      <path class="wire" d="M330 202 H380 V250 H590" marker-end="url(#arw)"/>
+      <path class="wire" d="M275 262 V216" marker-end="url(#arw)"/><text x="275" y="280" class="mid" style="font-weight:700">Cin</text>
+      <text x="598" y="254" style="font-weight:700">Cout</text>
+      <rect class="blk" x="430" y="20" width="70" height="210" rx="12" style="stroke:var(--sh)"/><text x="465" y="130" class="mid" style="font-weight:700">MUX</text>
+      <path class="wire" d="M465 270 V232" marker-end="url(#arw)"/><text x="465" y="286" class="mid m">opcode</text>
+      <path class="wire" d="M500 125 H590" marker-end="url(#arw)"/><text x="596" y="130" style="font-weight:700">R</text>
+    </svg>
+    <figcaption>Rebanada de 1 bit: las tres unidades trabajan siempre en paralelo con los mismos A y B; el opcode elige a cuál “escuchar”.</figcaption>
+  </div>
+  <div class="callout" style="--c:var(--lo);--cr:251,191,36"><b>Dato histórico:</b> el chip 74181 era justo eso, cuatro de estas rebanadas en un solo circuito integrado, con el opcode de 4 bits (<code>S3…S0</code>) y una entrada <code>M</code> para elegir entre modo lógico y aritmético.</div>
+</div></section>
+
+<!-- ============ 04 DESPLAZAMIENTO ============ -->
+<section id="desplazamiento"><div class="wrap reveal sh">
+  <p class="eyebrow" style="color:var(--sh)">04 · Unidad de Desplazamiento</p>
+  <h2>Mover bits es multiplicar</h2>
+  <p class="sub">Un desplazamiento corre todos los bits de un registro hacia la izquierda o la derecha. El bit que “sale” va a la bandera de acarreo, y por el otro lado entra un cero, una copia del signo o el mismo bit que salió, según el tipo.</p>
+
+  <h3>Tipos de desplazamiento</h3>
+  <div class="scroll"><table class="tbl" style="--c:var(--sh);--cr:192,132,252;width:100%">
+    <tr><th style="text-align:left">Tipo</th><th>Sigla</th><th>Qué entra</th><th>10110101 →</th><th>Para qué</th></tr>
+    <tr><td style="text-align:left">Lógico izquierda</td><td>SHL</td><td>0 por la derecha</td><td class="hi">0110 1010</td><td style="text-align:left;font-family:'Space Grotesk'">× 2</td></tr>
+    <tr><td style="text-align:left">Lógico derecha</td><td>SHR</td><td>0 por la izquierda</td><td class="hi">0101 1010</td><td style="text-align:left;font-family:'Space Grotesk'">÷ 2 sin signo</td></tr>
+    <tr><td style="text-align:left">Aritmético derecha</td><td>SAR</td><td>copia del bit de signo</td><td class="hi">1101 1010</td><td style="text-align:left;font-family:'Space Grotesk'">÷ 2 con signo</td></tr>
+    <tr><td style="text-align:left">Rotación izquierda</td><td>ROL</td><td>el bit que salió</td><td class="hi">0110 1011</td><td style="text-align:left;font-family:'Space Grotesk'">cifrado, hashes</td></tr>
+    <tr><td style="text-align:left">Rotación derecha</td><td>ROR</td><td>el bit que salió</td><td class="hi">1101 1010</td><td style="text-align:left;font-family:'Space Grotesk'">cifrado, hashes</td></tr>
+  </table></div>
+  <p class="sub">El desplazamiento aritmético a la izquierda es idéntico al lógico: multiplicar por 2 funciona igual con o sin signo.</p>
+
+  <h3>Pruébalo: registro de 8 bits</h3>
+  <div class="card sh c">
+    <p class="sub" style="margin-top:0">Haz clic en cualquier bit para cambiarlo y aplica un desplazamiento. La celda punteada es la bandera <b>C</b> (el bit que salió).</p>
+    <div id="shBits" class="bits"></div>
+    <div class="stat" id="shStat"></div>
+    <div class="ops" id="shOps"></div>
+    <div class="ops" style="margin-top:10px">
+      <button class="btn sm" data-p="13">Cargar 13</button><button class="btn sm" data-p="244">Cargar −12 (11110100)</button><button class="btn sm" data-p="181">Cargar 10110101</button>
+    </div>
+    <p id="shMsg" class="sub" style="min-height:1.7em;margin-bottom:0"></p>
+  </div>
+
+  <h3>Utilidad: multiplicación y división rápidas</h3>
+  <div class="split">
+    <div>
+      <p>Desplazar a la izquierda <i>n</i> posiciones multiplica por 2<sup><i>n</i></sup>; desplazar a la derecha divide entre 2<sup><i>n</i></sup> (descartando el resto). Es mucho más barato que usar el multiplicador o el divisor.</p>
+      <div class="scroll"><table class="tbl" style="--c:var(--sh);--cr:192,132,252">
+        <tr><th>x = 13</th><th>Binario</th><th>Equivale a</th></tr>
+        <tr><td>x</td><td>0000 1101</td><td>13</td></tr>
+        <tr><td>x SHL 1</td><td class="hi">0001 1010</td><td>13 × 2 = 26</td></tr>
+        <tr><td>x SHL 2</td><td class="hi">0011 0100</td><td>13 × 4 = 52</td></tr>
+        <tr><td>x SHL 3</td><td class="hi">0110 1000</td><td>13 × 8 = 104</td></tr>
+        <tr><td>x SHR 1</td><td class="hi">0000 0110</td><td>⌊13 ÷ 2⌋ = 6</td></tr>
+      </table></div>
+      <div class="callout" style="--c:var(--sh);--cr:192,132,252"><b>Cuidado con los negativos:</b> SAR redondea hacia −∞. Por eso −13 SAR 1 da −7 y no −6.</div>
+    </div>
+    <div class="card c sh"><div class="tagline">Ejemplo práctico</div><h4>Multiplicar por 10 sin multiplicar</h4>
+<div class="code">10·x = 8·x + 2·x
+     = (x &lt;&lt; 3) + (x &lt;&lt; 1)
+
+x = 5:  (5 &lt;&lt; 3) + (5 &lt;&lt; 1)
+      = 40 + 10 = 50</div>
+      <p class="sub">Dos desplazamientos y una suma. Los compiladores hacen esta sustitución por ti.</p></div>
+  </div>
+  <p><b>Barrel shifter.</b> Para desplazar cualquier cantidad de posiciones en un solo ciclo, las CPU usan un <i>desplazador de barril</i>: capas de multiplexores donde la capa <i>k</i> desplaza 2<sup><i>k</i></sup> posiciones o no. Con 6 capas se cubre cualquier desplazamiento de 0 a 63 bits.</p>
+</div></section>
+
+<!-- ============ 05 INTERACCIÓN ============ -->
+<section id="interaccion"><div class="wrap reveal">
+  <p class="eyebrow">05 · Interacción entre las unidades</p>
+  <h2>Cómo trabajan juntas</h2>
+  <p class="sub">Los operandos A y B llegan <b>a las tres unidades a la vez</b>. Todas calculan en paralelo, pero el <i>opcode</i> hace que un multiplexor deje pasar solo el resultado de la unidad que corresponde. Las banderas se actualizan con ese resultado.</p>
+
+  <div class="card" id="lab">
+    <div class="tagline" style="color:var(--ar)">Laboratorio · ALU de 8 bits</div>
+    <div class="lab">
+      <div>
+        <label for="labA">Operando A (0–255)</label>
+        <input id="labA" type="number" min="0" max="255" value="200" inputmode="numeric">
+        <div id="labAb" class="bits" style="margin-top:8px"></div>
+        <label for="labB">Operando B (0–255)</label>
+        <input id="labB" type="number" min="0" max="255" value="100" inputmode="numeric">
+        <div id="labBb" class="bits" style="margin-top:8px"></div>
+        <div class="opgrp ar"><div class="tagline">Aritmética</div><div class="ops" data-u="ar"></div></div>
+        <div class="opgrp lo"><div class="tagline">Lógica</div><div class="ops" data-u="lo"></div></div>
+        <div class="opgrp sh"><div class="tagline">Desplazamiento (A se desplaza B mod 8 posiciones)</div><div class="ops" data-u="sh"></div></div>
+      </div>
+      <div>
+        <svg id="blk" viewBox="0 0 640 345" role="img" aria-label="Diagrama de bloques de la ALU con sus tres unidades">
+          <path class="wire on" d="M56 162 H130" marker-end="url(#arw)"/><text x="14" y="168" style="font-weight:700">A, B</text>
+          <path class="wire on" d="M130 62 V262"/>
+          <g class="wire on"><path d="M130 62 H188" marker-end="url(#arw)"/><path d="M130 162 H188" marker-end="url(#arw)"/><path d="M130 262 H188" marker-end="url(#arw)"/></g>
+          <g class="unitbox ar"><rect x="190" y="30" width="200" height="64" rx="12"/><text x="290" y="58" class="mid" style="font-weight:700">Unidad Aritmética</text><text x="290" y="78" class="m mid">ADD · SUB</text></g>
+          <g class="unitbox lo"><rect x="190" y="130" width="200" height="64" rx="12"/><text x="290" y="158" class="mid" style="font-weight:700">Unidad Lógica</text><text x="290" y="178" class="m mid">AND · OR · XOR · NOT</text></g>
+          <g class="unitbox sh"><rect x="190" y="230" width="200" height="64" rx="12"/><text x="290" y="258" class="mid" style="font-weight:700">Unidad de Desplazamiento</text><text x="290" y="278" class="m mid">SHL · SHR · SAR · ROL · ROR</text></g>
+          <path class="wire ar" d="M390 62 H448" marker-end="url(#arw)"/><path class="wire lo" d="M390 162 H448" marker-end="url(#arw)"/><path class="wire sh" d="M390 262 H448" marker-end="url(#arw)"/>
+          <rect class="blk" x="450" y="40" width="56" height="244" rx="10" style="stroke:#6b7fc4"/><text x="478" y="168" class="mid" style="font-weight:700">MUX</text>
+          <path class="wire on" d="M478 24 V38" marker-end="url(#arw)"/><text x="478" y="16" class="mid m">opcode</text>
+          <path class="wire on" d="M506 162 H596" marker-end="url(#arw)"/><text x="514" y="152" class="m">resultado</text>
+          <path class="wire on" d="M478 286 V318" marker-end="url(#arw)"/><text x="478" y="336" class="mid m">banderas Z S C V</text>
+        </svg>
+        <div class="card" style="background:var(--panel2);padding:14px 16px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="res" id="labOp">ADD</span><span class="m" style="color:var(--muted)">→ resultado</span></div>
+          <div id="labR" class="bits" style="margin:8px 0"></div>
+          <div class="stat" id="labS"></div>
+          <div class="pills" id="labF"></div>
+          <p id="labExp" class="sub" style="margin-bottom:0"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>El ciclo de una instrucción: <code>ADD AX, BX</code></h3>
+  <div class="grid4">
+    <div class="card step"><div class="n">PASO 1</div><h4>Captura</h4><p class="sub">El contador de programa envía la dirección a memoria. La instrucción llega al registro de instrucción.</p></div>
+    <div class="card step"><div class="n">PASO 2</div><h4>Decodificación</h4><p class="sub">La unidad de control reconoce <code>ADD</code>, elige los registros AX y BX y envía a la ALU la señal “sumar”.</p></div>
+    <div class="card step c ar"><div class="n" style="color:var(--ar)">PASO 3 · ALU</div><h4>Ejecución</h4><p class="sub">Con AX = 2 y BX = 3: <code>0010 + 0011 = 0101</code>. Banderas: Z=0, S=0, C=0, O=0.</p></div>
+    <div class="card step"><div class="n">PASO 4</div><h4>Escritura</h4><p class="sub">El resultado (5) se guarda en AX y las banderas pasan al registro FLAGS.</p></div>
+  </div>
+
+  <h3>Ejemplo en lenguaje ensamblador</h3>
+  <p>Un mini programa x86 que usa <b>las tres unidades</b> y termina con una decisión. Avanza paso a paso y observa registros, banderas y qué unidad actuó.</p>
+  <div class="card prog">
+    <div>
+      <div class="code" id="progCode" style="white-space:normal;padding:10px"></div>
+      <div class="ops"><button class="btn primary sm" id="progNext">Siguiente paso ▶</button><button class="btn sm" id="progReset">Reiniciar</button></div>
+    </div>
+    <div>
+      <div class="regs" id="progRegs"></div>
+      <div class="pills" id="progFlags" style="margin:8px 0"></div>
+      <p id="progNote" class="sub" style="min-height:4.5em;margin-bottom:0"></p>
+      <span id="progUnit" class="chip unitnote" style="display:none"></span>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ 06 RENDIMIENTO ============ -->
+<section id="rendimiento"><div class="wrap reveal">
+  <p class="eyebrow">06 · Rendimiento del sistema</p>
+  <h2>Por qué la ALU marca el ritmo</h2>
+  <p class="sub">La ALU interviene en la etapa de <b>ejecución</b> de casi toda instrucción. Si es lenta, todo el procesador espera. Por eso se diseñó con mucho ingenio para que sea rápida.</p>
+
+  <h3>Relación con el ciclo de instrucción</h3>
+  <p>Una instrucción pasa por etapas: <b>IF</b> (captura), <b>ID</b> (decodificación), <b>EX</b> (ejecución en la ALU), <b>MEM</b> (acceso a memoria) y <b>WB</b> (escritura). Con <b>segmentación</b> (<i>pipeline</i>) cada etapa trabaja sobre una instrucción distinta al mismo tiempo, y la ALU casi nunca está ociosa.</p>
+  <div class="fig scroll"><div class="pipe" id="pipe"></div>
+    <div class="cap">Cuatro instrucciones en 8 ciclos con pipeline, frente a 20 ciclos sin él (4 × 5). En azul, cada paso por la ALU.</div></div>
+
+  <h3>Optimización de operaciones en procesadores modernos</h3>
+  <div class="grid3">
+    <div class="card c ar"><div class="tagline">Sumadores</div><h4>Acarreo anticipado</h4><p class="sub">Calcula los acarreos en paralelo en lugar de esperar a que viajen bit por bit. El retardo crece con log₂ <i>n</i> en vez de con <i>n</i>.</p></div>
+    <div class="card c ar"><div class="tagline">Multiplicadores</div><h4>Booth y árboles de Wallace</h4><p class="sub">Reducen los productos parciales con sumadores en paralelo. Una multiplicación entera tarda solo unos pocos ciclos.</p></div>
+    <div class="card c sh"><div class="tagline">Desplazadores</div><h4>Barrel shifter</h4><p class="sub">Desplaza cualquier cantidad de bits en un solo ciclo con capas de multiplexores.</p></div>
+    <div class="card c lo"><div class="tagline">Paralelismo</div><h4>Varias ALU por núcleo</h4><p class="sub">Un núcleo superescalar ejecuta varias operaciones enteras en el mismo ciclo, usando varias ALU a la vez.</p></div>
+    <div class="card c lo"><div class="tagline">Reordenamiento</div><h4>Ejecución fuera de orden</h4><p class="sub">Si una instrucción espera un dato, la CPU adelanta otras independientes para mantener ocupadas las ALU.</p></div>
+    <div class="card c sh"><div class="tagline">Datos</div><h4>SIMD: AVX, NEON</h4><p class="sub">Una sola instrucción aplica la misma operación a 4, 8 o 16 datos en paralelo, con ALU vectoriales.</p></div>
+  </div>
+
+  <h3>Acarreo en cascada vs. acarreo anticipado</h3>
+  <div class="card"><div id="bars"></div><div class="cap" style="text-align:left">Tendencia teórica (unidades relativas: <i>n</i> frente a log₂ <i>n</i>). No son tiempos medidos de un chip real, pero muestran por qué importa el diseño.</div></div>
+</div></section>
+
+<!-- ============ VIDEO ============ -->
+<section id="video"><div class="wrap reveal">
+  <p class="eyebrow">Video explicativo</p>
+  <h2>Míralo explicado</h2>
+  <div class="card video" id="videoBox"></div>
+</div></section>
+
+<!-- ============ CIERRE ============ -->
+<section id="cierre"><div class="wrap reveal">
+  <p class="eyebrow">Conclusiones y referencias</p>
+  <h2>Lo que nos llevamos</h2>
+  <div class="grid3">
+    <div class="card c ar"><h4>Una sola pieza, tres talentos</h4><p class="sub">Aritmética, lógica y desplazamiento comparten operandos y trabajan en paralelo; un multiplexor elige la respuesta.</p></div>
+    <div class="card c lo"><h4>Las banderas conectan todo</h4><p class="sub">Con ellas la ALU deja de ser una calculadora y se convierte en la base de las decisiones y del control de flujo.</p></div>
+    <div class="card c sh"><h4>Su velocidad define el sistema</h4><p class="sub">Pipelines, varias ALU, acarreo anticipado y SIMD existen para que la ejecución nunca se detenga.</p></div>
+  </div>
+  <h3>Referencias</h3>
+  <ul class="refs">
+    <li>Stallings, W. <i>Organización y arquitectura de computadores.</i> Pearson.</li>
+    <li>Patterson, D. y Hennessy, J. <i>Computer Organization and Design: The Hardware/Software Interface.</i> Morgan Kaufmann.</li>
+    <li>Tanenbaum, A. y Austin, T. <i>Structured Computer Organization.</i> Pearson.</li>
+    <li>Mano, M. M. <i>Arquitectura de computadoras.</i> Pearson.</li>
+    <li>Intel. <i>Intel 64 and IA-32 Architectures Software Developer’s Manual.</i></li>
+    <li>von Neumann, J. (1945). <i>First Draft of a Report on the EDVAC.</i></li>
+  </ul>
+</div></section>
+</main>
+
+<footer><div class="wrap">Trabajo de Aplicación II Corte · Instituto Universitario Politécnico “Santiago Mariño”<br>Hecho con HTML, CSS y JavaScript puro, sin librerías.</div></footer>
+
+<script>
+/* ============ CONFIGURACIÓN (edita aquí) ============ */
+const CONFIG = {
+  VIDEO_URL: "",      // pega aquí el enlace del video (YouTube, Drive, etc.)
+  INTEGRANTES: []     // por ejemplo: ["Nombre Apellido", "Nombre Apellido"]
+};
+/* ====================================================== */
+
+/*ALU-START*/
+function alu(op, a, b, bits){
+  const M = (1 << bits) - 1, top = 1 << (bits - 1);
+  a &= M; b &= M;
+  let r = 0, c = 0, v = 0, t;
+  switch(op){
+    case 'ADD': t = a + b; r = t & M; c = t > M ? 1 : 0; v = (~(a ^ b) & (a ^ r) & top) ? 1 : 0; break;
+    case 'SUB': case 'CMP': t = a - b; r = t & M; c = a < b ? 1 : 0; v = ((a ^ b) & (a ^ r) & top) ? 1 : 0; break;
+    case 'AND': r = a & b; break;
+    case 'OR':  r = a | b; break;
+    case 'XOR': r = a ^ b; break;
+    case 'NOT': r = (~a) & M; break;
+    case 'SHL': case 'SHR': case 'SAR': case 'ROL': case 'ROR': {
+      r = a;
+      const n = b % bits;
+      for(let i = 0; i < n; i++){
+        if(op === 'SHL'){ c = (r & top) ? 1 : 0; r = (r << 1) & M; }
+        else if(op === 'SHR'){ c = r & 1; r = r >>> 1; }
+        else if(op === 'SAR'){ c = r & 1; r = (r >>> 1) | (r & top); }
+        else if(op === 'ROL'){ c = (r & top) ? 1 : 0; r = ((r << 1) | c) & M; }
+        else { c = r & 1; r = ((r >>> 1) | (c ? top : 0)) & M; }
+      }
+      break;
+    }
+  }
+  return { r, z: r === 0 ? 1 : 0, s: (r & top) ? 1 : 0, c, v };
+}
+const UNIT = { ADD:'ar', SUB:'ar', CMP:'ar', AND:'lo', OR:'lo', XOR:'lo', NOT:'lo', SHL:'sh', SHR:'sh', SAR:'sh', ROL:'sh', ROR:'sh' };
+/*ALU-END*/
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const signed = (v, bits) => v >= (1 << (bits - 1)) ? v - (1 << bits) : v;
+const bin = (v, bits, g = 4) => v.toString(2).padStart(bits, '0').replace(new RegExp('(.{' + g + '})(?!$)', 'g'), '$1 ');
+function bitCells(v, bits, cls){
+  let h = '';
+  for(let i = bits - 1; i >= 0; i--){
+    h += `<span class="bit ${cls||''} ${(v >> i) & 1 ? 'on' : ''} ${i % 4 === 0 && i ? 'sep' : ''}">${(v >> i) & 1}</span>`;
+  }
+  return h;
+}
+
+/* ---------- Configuración visible ---------- */
+(function(){
+  if(CONFIG.INTEGRANTES.length) $('#integrantes').textContent = ' · ' + CONFIG.INTEGRANTES.join(', ');
+  const box = $('#videoBox'), u = CONFIG.VIDEO_URL.trim();
+  if(!u){
+    box.innerHTML = '<p class="sub" style="margin:0">El enlace al video explicativo se publicará aquí.</p>';
+    return;
+  }
+  const m = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+  let h = '';
+  if(m) h += `<div class="vframe"><iframe src="https://www.youtube.com/embed/${m[1]}" title="Video explicativo de la ALU" allowfullscreen loading="lazy"></iframe></div>`;
+  h += `<p style="margin:0"><a class="btn primary" href="${u}" target="_blank" rel="noopener">Abrir el video explicativo ↗</a></p>`;
+  h += '<p class="sub" style="margin:0">En el video participamos todos los integrantes del equipo.</p>';
+  box.innerHTML = h;
+})();
+
+/* ---------- Animaciones de aparición y menú activo ---------- */
+(function(){
+  const rv = $$('.reveal');
+  if(!('IntersectionObserver' in window)){ rv.forEach(e => e.classList.add('in')); return; }
+  const io = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .06 });
+  rv.forEach(e => io.observe(e));
+  const links = $$('#links a'), secs = links.map(a => $(a.getAttribute('href')));
+  const so = new IntersectionObserver(es => es.forEach(e => {
+    if(e.isIntersecting){
+      links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
+      const on = $('#links a.on'); if(on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+    }
+  }), { rootMargin: '-45% 0px -50% 0px' });
+  secs.forEach(s => s && so.observe(s));
+})();
+
+/* ---------- Sumador completo interactivo ---------- */
+(function(){
+  const st = { A: 0, B: 0, Cin: 0 };
+  function draw(){
+    const x1 = st.A ^ st.B, a1 = st.A & st.B, a2 = x1 & st.Cin, S = x1 ^ st.Cin, C = a1 | a2;
+    const val = { A: st.A, B: st.B, Cin: st.Cin, x1, a1, a2, S, Cout: C };
+    for(const k in val) $$('.w-' + k).forEach(g => g.classList.toggle('on', !!val[k]));
+    $('#faS').textContent = S; $('#faC').textContent = C;
+    $$('#faTog .tg').forEach(b => { const k = b.dataset.i; b.textContent = k + ' = ' + st[k]; b.classList.toggle('on', !!st[k]); b.setAttribute('aria-pressed', !!st[k]); });
+    $('#faOut').textContent = `${st.A} + ${st.B} + ${st.Cin} = ${A2(S, C)}  →  S = ${S}, Cout = ${C}`;
+  }
+  const A2 = (S, C) => (C << 1 | S).toString(2).padStart(2, '0') + ' (' + (C * 2 + S) + ')';
+  $$('#faTog .tg').forEach(b => b.addEventListener('click', () => { st[b.dataset.i] ^= 1; draw(); }));
+  draw();
+})();
+
+/* ---------- Sumador de 4 bits (generado) ---------- */
+(function(){
+  let s = '<svg viewBox="0 0 640 190" role="img" aria-label="Sumador de 4 bits con acarreo en cascada">';
+  const xs = [40, 190, 340, 490];
+  xs.forEach((x, k) => {
+    const i = 3 - k, cx = x + 45;
+    s += `<rect class="blk" x="${x}" y="60" width="90" height="60" rx="12" style="stroke:var(--ar)"/><text x="${cx}" y="96" class="mid" style="font-weight:700">FA${i}</text>`;
+    s += `<path class="wire" d="M${cx - 18} 18 V58" marker-end="url(#arw)"/><path class="wire" d="M${cx + 18} 18 V58" marker-end="url(#arw)"/>`;
+    s += `<text x="${cx - 18}" y="12" class="m mid">A${i}</text><text x="${cx + 18}" y="12" class="m mid">B${i}</text>`;
+    s += `<path class="wire" d="M${cx} 122 V158" marker-end="url(#arw)"/><text x="${cx}" y="178" class="m mid">S${i}</text>`;
+    if(k < 3) s += `<path class="wire on" d="M${x + 150} 90 H${x + 92}" marker-end="url(#arw)"/><text x="${x + 121}" y="80" class="m mid">C${i}</text>`;
+  });
+  s += '<path class="wire on" d="M626 90 H582" marker-end="url(#arw)"/><text x="604" y="80" class="m mid">C0</text>';
+  s += '<path class="wire on" d="M38 90 H6" marker-end="url(#arw)"/><text x="22" y="80" class="m mid">C4</text>';
+  s += '</svg>';
+  $('#ripple').innerHTML = s;
+})();
+
+/* ---------- Compuertas ---------- */
+(function(){
+  const sym = {
+    AND: '<line x1="0" y1="15" x2="10" y2="15"/><line x1="0" y1="35" x2="10" y2="35"/><path d="M10 5H38A20 20 0 0 1 38 45H10Z"/><line x1="58" y1="25" x2="80" y2="25"/>',
+    OR:  '<line x1="0" y1="15" x2="15" y2="15"/><line x1="0" y1="35" x2="15" y2="35"/><path d="M6 5C30 5 52 10 70 25C52 40 30 45 6 45C18 33 18 17 6 5Z"/><line x1="70" y1="25" x2="80" y2="25"/>',
+    XOR: '<line x1="0" y1="15" x2="19" y2="15"/><line x1="0" y1="35" x2="19" y2="35"/><path d="M14 5C36 5 54 10 70 25C54 40 36 45 14 45C26 33 26 17 14 5Z"/><path d="M5 5C17 17 17 33 5 45" fill="none"/><line x1="70" y1="25" x2="80" y2="25"/>',
+    NOT: '<line x1="0" y1="25" x2="12" y2="25"/><path d="M12 5L52 25L12 45Z"/><circle cx="57" cy="25" r="5"/><line x1="62" y1="25" x2="80" y2="25"/>'
+  };
+  const G = [
+    { n: 'AND', e: 'Y = A · B', t: [[0,0,0],[0,1,0],[1,0,0],[1,1,1]], u: 'Solo es 1 si ambas entradas son 1.' },
+    { n: 'OR',  e: 'Y = A + B', t: [[0,0,0],[0,1,1],[1,0,1],[1,1,1]], u: 'Es 1 si al menos una entrada es 1.' },
+    { n: 'XOR', e: 'Y = A ⊕ B', t: [[0,0,0],[0,1,1],[1,0,1],[1,1,0]], u: 'Es 1 si las entradas son distintas.' },
+    { n: 'NOT', e: 'Y = A̅', t: [[0,1],[1,0]], u: 'Invierte el bit: 0 pasa a 1 y viceversa.' }
+  ];
+  $('#gates').innerHTML = G.map(g => {
+    const two = g.t[0].length === 3;
+    const th = two ? '<th>A</th><th>B</th><th>Y</th>' : '<th>A</th><th>Y</th>';
+    const rows = g.t.map(r => '<tr>' + r.map((x, i) => `<td class="${i === r.length - 1 && x ? 'hi' : ''}">${x}</td>`).join('') + '</tr>').join('');
+    return `<div class="card gate lo"><div class="tagline">${g.n}</div>
+      <svg viewBox="0 0 80 50" aria-label="Símbolo de la compuerta ${g.n}">${sym[g.n]}</svg>
+      <div class="expr">${g.e}</div>
+      <div class="scroll"><table class="tbl" style="--c:var(--lo);--cr:251,191,36"><tr>${th}</tr>${rows}</table></div>
+      <p class="sub" style="font-size:15px;margin:4px 0 0">${g.u}</p></div>`;
+  }).join('');
+})();
+
+/* ---------- Demostrador de desplazamientos ---------- */
+(function(){
+  let val = 13, cf = 0, last = '';
+  const ops = ['SHL', 'SHR', 'SAR', 'ROL', 'ROR'];
+  const names = { SHL: 'Lógico ←', SHR: 'Lógico →', SAR: 'Aritmético →', ROL: 'Rotar ←', ROR: 'Rotar →' };
+  const msg = {
+    SHL: 'Todos los bits suben una posición, entra un 0 por la derecha y el bit más alto pasa a C.',
+    SHR: 'Todos los bits bajan una posición, entra un 0 por la izquierda y el bit más bajo pasa a C.',
+    SAR: 'Como SHR, pero por la izquierda se copia el bit de signo: el número conserva su signo.',
+    ROL: 'El bit que sale por la izquierda vuelve a entrar por la derecha. No se pierde nada.',
+    ROR: 'El bit que sale por la derecha vuelve a entrar por la izquierda. No se pierde nada.'
+  };
+  $('#shOps').innerHTML = ops.map(o => `<button class="btn sm sh" data-o="${o}">${o} · ${names[o]}</button>`).join('');
+  function draw(){
+    let h = '';
+    for(let i = 7; i >= 0; i--) h += `<button class="bit sh ${(val >> i) & 1 ? 'on' : ''} ${i === 4 ? 'sep' : ''}" data-b="${i}" aria-label="bit ${i}">${(val >> i) & 1}</button>`;
+    h += `<span class="bit sh cf ${cf ? 'on' : ''}" title="Bandera de acarreo">${cf}</span>`;
+    $('#shBits').innerHTML = h;
+    $('#shStat').innerHTML = `<span>Binario <b>${bin(val, 8)}</b></span><span>Sin signo <b>${val}</b></span><span>Con signo <b>${signed(val, 8)}</b></span><span>C <b>${cf}</b></span>`;
+    $('#shMsg').textContent = last ? msg[last] : 'Elige una operación.';
+  }
+  function flash(){ const e = $('#shBits'); e.classList.remove('flash'); void e.offsetWidth; e.classList.add('flash'); }
+  $('#shBits').addEventListener('click', e => { const b = e.target.closest('[data-b]'); if(!b) return; val ^= 1 << +b.dataset.b; cf = 0; last = ''; draw(); });
+  $('#shOps').addEventListener('click', e => { const b = e.target.closest('[data-o]'); if(!b) return; const o = b.dataset.o, r = alu(o, val, 1, 8); val = r.r; cf = r.c; last = o; draw(); flash(); });
+  $$('[data-p]').forEach(b => b.addEventListener('click', () => { val = +b.dataset.p; cf = 0; last = ''; draw(); }));
+  draw();
+})();
+
+/* ---------- Laboratorio de la ALU ---------- */
+(function(){
+  const defs = [['ar', ['ADD', 'SUB']], ['lo', ['AND', 'OR', 'XOR', 'NOT']], ['sh', ['SHL', 'SHR', 'SAR', 'ROL', 'ROR']]];
+  let op = 'ADD';
+  defs.forEach(([u, list]) => {
+    $(`.ops[data-u="${u}"]`).innerHTML = list.map(o => `<button class="btn sm ${u}" data-op="${o}">${o}</button>`).join('');
+  });
+  const rd = id => { const n = parseInt($(id).value, 10); return isNaN(n) ? 0 : Math.max(0, Math.min(255, n)); };
+  function explain(o, a, b, r){
+    const n = b % 8;
+    let t;
+    switch(o){
+      case 'ADD': t = `${a} + ${b} = ${a + b}.` + (a + b > 255 ? ` No cabe en 8 bits: queda ${r.r} y se activa el acarreo (C = 1).` : ' Cabe en 8 bits, sin acarreo.'); break;
+      case 'SUB': t = `${a} − ${b} = ${a - b}.` + (a < b ? ` Resultado negativo: en complemento a dos queda ${r.r} (${signed(r.r, 8)} con signo) y C = 1 indica préstamo.` : ' No hay préstamo (C = 0).'); break;
+      case 'AND': t = 'Cada bit del resultado es 1 solo si los bits de A y de B en esa posición son 1.'; break;
+      case 'OR': t = 'Cada bit del resultado es 1 si al menos uno de los dos bits es 1.'; break;
+      case 'XOR': t = 'Cada bit del resultado es 1 si los bits de A y B son distintos.' + (a === b ? ' Como A = B, todo es 0 y se activa Z.' : ''); break;
+      case 'NOT': t = 'Invierte cada bit de A. B no interviene.'; break;
+      default: t = `Desplaza A ${n} posición(es) (B mod 8 = ${n}). ` + (n === 0 ? 'Con 0 posiciones, A queda igual.' : `El último bit que salió quedó en C (${r.c}).`);
+    }
+    if((o === 'ADD' || o === 'SUB') && r.v) t += ' ¡Desbordamiento con signo (V = 1): el resultado se sale del rango −128…127!';
+    return t;
+  }
+  function draw(){
+    const a = rd('#labA'), b = rd('#labB'), r = alu(op, a, b, 8), u = UNIT[op];
+    $('#labAb').innerHTML = bitCells(a, 8, 'ar'); $('#labBb').innerHTML = bitCells(b, 8, 'lo');
+    $('#labAb').className = 'bits'; $('#labBb').className = 'bits';
+    $('#labR').className = 'bits ' + u; $('#labR').innerHTML = bitCells(r.r, 8, u);
+    $('#labOp').textContent = op;
+    $('#labS').innerHTML = `<span>Hex <b>0x${r.r.toString(16).toUpperCase().padStart(2, '0')}</b></span><span>Sin signo <b>${r.r}</b></span><span>Con signo <b>${signed(r.r, 8)}</b></span>`;
+    $('#labF').innerHTML = [['Z', r.z, 'cero'], ['S', r.s, 'signo'], ['C', r.c, 'acarreo'], ['V', r.v, 'desborde']].map(f => `<span class="pill ${f[1] ? 'on' : ''}" title="${f[2]}">${f[0]} = ${f[1]}</span>`).join('');
+    $('#labExp').textContent = explain(op, a, b, r);
+    $$('#blk .unitbox').forEach(g => { const k = ['ar', 'lo', 'sh'].find(x => g.classList.contains(x)); g.classList.toggle('act', k === u); g.classList.toggle('dim', k !== u); });
+    $$('#blk .wire.ar,#blk .wire.lo,#blk .wire.sh').forEach(w => { const k = ['ar', 'lo', 'sh'].find(x => w.classList.contains(x)); w.classList.toggle('act', k === u); });
+    $$('#lab [data-op]').forEach(x => x.classList.toggle('on', x.dataset.op === op));
+  }
+  $('#lab').addEventListener('click', e => { const bt = e.target.closest('[data-op]'); if(bt){ op = bt.dataset.op; draw(); } });
+  ['#labA', '#labB'].forEach(id => $(id).addEventListener('input', draw));
+  draw();
+})();
+
+/* ---------- Programa en ensamblador paso a paso ---------- */
+(function(){
+  const W = 16;
+  const P = [
+    { asm: 'MOV AX, 5', u: null, run: s => { s.AX = 5; }, note: 'Transferencia de datos: el valor 5 viaja por el bus hasta AX. Aquí la ALU no participa.' },
+    { asm: 'MOV BX, AX', u: null, run: s => { s.BX = s.AX; }, note: 'Copia de registro a registro. Tampoco pasa por la ALU.' },
+    { asm: 'SHL AX, 3', u: 'sh', run: s => { const r = alu('SHL', s.AX, 3, W); s.AX = r.r; s.f = r; }, note: 'Unidad de desplazamiento: 5 × 2³ = 40. Tres desplazamientos a la izquierda equivalen a multiplicar por 8.' },
+    { asm: 'SHL BX, 1', u: 'sh', run: s => { const r = alu('SHL', s.BX, 1, W); s.BX = r.r; s.f = r; }, note: 'Un desplazamiento: 5 × 2 = 10.' },
+    { asm: 'ADD AX, BX', u: 'ar', run: s => { const r = alu('ADD', s.AX, s.BX, W); s.AX = r.r; s.f = r; }, note: 'Unidad aritmética: 40 + 10 = 50. Es 5 × 10 sin usar el multiplicador.' },
+    { asm: 'AND AX, 0Fh', u: 'lo', run: s => { const r = alu('AND', s.AX, 15, W); s.AX = r.r; s.f = r; }, note: 'Unidad lógica: la máscara 0Fh deja solo los 4 bits bajos. 0011 0010 AND 0000 1111 = 0000 0010 (2).' },
+    { asm: 'CMP AX, 2', u: 'ar', run: s => { s.f = alu('CMP', s.AX, 2, W); }, note: 'CMP resta AX − 2 sin guardar el resultado: solo actualiza las banderas. Como 2 − 2 = 0, Z = 1: son iguales.' },
+    { asm: 'JE listo', u: 'ctl', run: s => {}, note: 'La unidad de control lee la bandera Z que dejó la ALU y, como vale 1, salta a la etiqueta “listo”. Así la ALU hace posible el control de flujo.' }
+  ];
+  const fresh = () => ({ AX: 0, BX: 0, f: { z: 0, s: 0, c: 0, v: 0 } });
+  let st = fresh(), i = -1;
+  const unitName = { ar: 'Unidad aritmética', lo: 'Unidad lógica', sh: 'Unidad de desplazamiento', ctl: 'Unidad de control (lee banderas)' };
+  $('#progCode').innerHTML = P.map((p, k) => `<span class="ln" id="ln${k}">${p.asm}${p.u && p.u !== 'ctl' ? ` <span class="cm">; ${unitName[p.u]}</span>` : ''}</span>`).join('');
+  function reg(n, v){ return `<div class="reg"><span class="nm">${n}</span><span class="dec">${v}</span><span class="bin">${bin(v, W)}</span></div>`; }
+  function draw(){
+    P.forEach((_, k) => { const e = $('#ln' + k); e.classList.toggle('done', k < i); e.classList.toggle('cur', k === i); const u = P[k].u; e.className = e.className.replace(/\b(ar|lo|sh)\b/g, '').trim(); if(k === i && u && u !== 'ctl') e.classList.add(u); });
+    $('#progRegs').innerHTML = reg('AX', st.AX) + reg('BX', st.BX);
+    $('#progFlags').innerHTML = [['ZF', st.f.z], ['SF', st.f.s], ['CF', st.f.c]].map(f => `<span class="pill ${f[1] ? 'on' : ''}">${f[0]} = ${f[1]}</span>`).join('');
+    const un = $('#progUnit');
+    if(i < 0){ $('#progNote').textContent = 'Pulsa “Siguiente paso” para ejecutar la primera instrucción.'; un.style.display = 'none'; }
+    else {
+      $('#progNote').textContent = P[i].note;
+      const u = P[i].u; un.style.display = 'inline-block';
+      un.className = 'chip unitnote ' + (u && u !== 'ctl' ? u : 'ar');
+      un.textContent = u ? unitName[u] : 'Sin ALU: movimiento de datos';
+    }
+    $('#progNext').disabled = i >= P.length - 1; $('#progNext').style.opacity = i >= P.length - 1 ? .5 : 1;
+  }
+  $('#progNext').addEventListener('click', () => { if(i < P.length - 1){ i++; P[i].run(st); draw(); } });
+  $('#progReset').addEventListener('click', () => { st = fresh(); i = -1; draw(); });
+  draw();
+})();
+
+/* ---------- Pipeline y barras ---------- */
+(function(){
+  const stg = ['IF', 'ID', 'EX', 'MEM', 'WB'];
+  let h = '<div class="h"></div>';
+  for(let c = 1; c <= 8; c++) h += `<div class="h">${c}</div>`;
+  for(let k = 0; k < 4; k++){
+    h += `<div class="l">I${k + 1}</div>`;
+    for(let c = 0; c < 8; c++){
+      const j = c - k;
+      h += (j >= 0 && j < 5) ? `<div class="${stg[j] === 'EX' ? 'x' : 's'}">${stg[j]}</div>` : '<div></div>';
+    }
+  }
+  $('#pipe').innerHTML = h;
+  let b = '';
+  [8, 16, 32, 64].forEach(n => {
+    const rip = n, cla = Math.log2(n);
+    b += `<div class="bar"><span class="lbl">${n} bits</span><i style="width:${rip / 64 * 62}%;background:var(--bad)"></i><span>cascada ≈ ${rip}</span></div>`;
+    b += `<div class="bar"><span class="lbl"></span><i style="width:${Math.max(cla / 64 * 62, 1.5)}%;background:var(--ar)"></i><span>anticipado ≈ ${cla}</span></div>`;
+  });
+  $('#bars').innerHTML = b;
+})();
+</script>
 </body>
 </html>

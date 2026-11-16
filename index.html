@@ -648,7 +648,7 @@ x = 5:  (5 &lt;&lt; 3) + (5 &lt;&lt; 1)
 /* ============ CONFIGURACIÓN (edita aquí) ============ */
 const CONFIG = {
   VIDEO_URL: "https://youtu.be/GPueS_oPwow",      // pega aquí el enlace del video (YouTube, Drive, etc.)
-  INTEGRANTES: []     // por ejemplo: ["Nombre Apellido", "Nombre Apellido"]
+  INTEGRANTES: ["Jose Arellano"]     // por ejemplo: ["Nombre Apellido", "Nombre Apellido"]
 };
 /* ====================================================== */
 
@@ -706,7 +706,7 @@ function bitCells(v, bits, cls){
   let h = '';
   if(m) h += `<div class="vframe"><iframe src="https://www.youtube.com/embed/${m[1]}" title="Video explicativo de la ALU" allowfullscreen loading="lazy"></iframe></div>`;
   h += `<p style="margin:0"><a class="btn primary" href="${u}" target="_blank" rel="noopener">Abrir el video explicativo ↗</a></p>`;
-  h += '<p class="sub" style="margin:0">En el video participamos todos los integrantes del equipo.</p>';
+  h += '<p class="sub" style="margin:0">En el video explico cada sección de la página y pruebo los simuladores.</p>';
   box.innerHTML = h;
 })();
 
